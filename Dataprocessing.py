@@ -11,14 +11,14 @@ class Trajectory3Dnewset(Dataset):
         super().__init__()
         if size == None:
             if task_type == 'C':
-                self.seq_len = size[-1] if slicing else 2656
+                self.seq_len = size[-1] if slicing and flag!='train' else 2656
                 self.pred_len = 5
             else:
                 self.seq_len = 100
                 self.pred_len = 100
         else:
             if task_type == 'C':
-                self.seq_len = size[-1] if slicing else size[0]
+                self.seq_len = size[-1] if slicing and flag!='train' else size[0]
                 self.pred_len = size[1]
             else:
                 self.seq_len = size[0]
@@ -91,17 +91,16 @@ class Trajectory3Dnewset(Dataset):
                     if self.slicing == False: tr = np.concatenate((tr, np.tile(tr[-1], (self.seq_len-len(tr), 1))), axis=0)
                     if i == 0:
                         if self.slicing:
-                            data_x_raw = [tr[l:l+self.seq_len] for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
-                            data_y_raw = [i for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
+                            data_x_raw = [tr[l*self.stride:l*self.stride+self.seq_len] for l in range((len(tr)-self.seq_len+1)//self.stride) if left <= l%10 < right]
+                            data_y_raw = [i for l in range((len(tr)-self.seq_len+1)//self.stride) if left <= l%10 < right]
                         else:
-                            # N = int(NSamples*5*(right-left)/10) if self.flag == 'train' else int(NSamples*(right-left)/10)
                             N = int(NSamples*(right-left)/10)
                             data_x_raw = [tr for _ in range(N)]
                             data_y_raw = [i for _ in range(N)]
                     else:
                         if self.slicing:
-                            sub_x_raw = [tr[l:l+self.seq_len] for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
-                            sub_y_raw = [i for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
+                            sub_x_raw = [tr[l*self.stride:l*self.stride+self.seq_len] for l in range((len(tr)-self.seq_len+1)//self.stride) if left <= l%10 < right]
+                            sub_y_raw = [i for l in range((len(tr)-self.seq_len+1)//self.stride) if left <= l%10 < right]
                             data_x_raw += sub_x_raw
                             data_y_raw += sub_y_raw
                         else:
@@ -148,6 +147,7 @@ def data_provider(args, flag):
         size=size,
         task_type = args.model,
         slicing = args.slicing,
+        stride = args.slice_stride,
         flag = flag,
         ratio= args.ratio)
     
