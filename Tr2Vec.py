@@ -17,7 +17,7 @@ class Tr2Vec:
         super().__init__()
         self.dataset = dataset
         self.args = args
-        input_dims=1 if args.individual else dataset.data_x.shape[-1]-1
+        input_dims=1 if args.individual else args.channel_num
 
         self.model = TrEncoder(
             input_dims=input_dims, 
