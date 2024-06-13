@@ -46,7 +46,7 @@ class ResBlock(nn.Module):
         out = self.gelu(out)
         return out
 
-class DilatedConvEncoder(nn.Module):
+class DilatedConvEncoder(nn.Module): # cnn
     def __init__(self, in_channels, channels, kernel_size):
         super().__init__()
         self.net = nn.Sequential(*[
