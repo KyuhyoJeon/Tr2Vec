@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class Trajectory3Dnewset(Dataset):
-    def __init__(self, path='Data/3D/new/csv/', size=None, task_type='C', slicing = False, flag='train', ratio = [7,1,2]):
+    def __init__(self, path='Data/3D/new/csv/', size=None, task_type='C', slicing = False, stride = 10, flag='train', ratio = [7,1,2]):
         super().__init__()
         if size == None:
             if task_type == 'C':
@@ -25,6 +25,7 @@ class Trajectory3Dnewset(Dataset):
                 self.pred_len = size[1]
         
         self.slicing = slicing
+        self.stride = stride
         self.task_type = task_type
         self.flag = flag
         self.path = path
@@ -43,6 +44,7 @@ class Trajectory3Dnewset(Dataset):
             'FinCmd_1', 'FinCmd_2', 'FinCmd_3', 'FinCmd_4']
         Y = [Class]
         '''
+        
         NSamples = 500 # if self.task_type == 'C' else 100
         
         d_type = {'train':0, 'valid':1, 'test':2}
@@ -89,8 +91,8 @@ class Trajectory3Dnewset(Dataset):
                     if self.slicing == False: tr = np.concatenate((tr, np.tile(tr[-1], (self.seq_len-len(tr), 1))), axis=0)
                     if i == 0:
                         if self.slicing:
-                            data_x_raw = [tr[l:l+10] for l in range(len(tr)-self.seq_len+1) if left <= l%10 < right]
-                            data_y_raw = [i for l in range(len(tr)-self.seq_len+1) if left <= l%10 < right]
+                            data_x_raw = [tr[l:l+self.seq_len] for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
+                            data_y_raw = [i for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
                         else:
                             # N = int(NSamples*5*(right-left)/10) if self.flag == 'train' else int(NSamples*(right-left)/10)
                             N = int(NSamples*(right-left)/10)
@@ -98,8 +100,8 @@ class Trajectory3Dnewset(Dataset):
                             data_y_raw = [i for _ in range(N)]
                     else:
                         if self.slicing:
-                            sub_x_raw = [tr[l:l+10] for l in range(len(tr)-self.seq_len+1) if left <= l%10 < right]
-                            sub_y_raw = [i for l in range(len(tr)-self.seq_len+1) if left <= l%10 < right]
+                            sub_x_raw = [tr[l:l+self.seq_len] for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
+                            sub_y_raw = [i for l in range(0, len(tr)-self.seq_len+1, self.stride) if left <= l%10 < right]
                             data_x_raw += sub_x_raw
                             data_y_raw += sub_y_raw
                         else:
