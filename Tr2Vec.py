@@ -135,6 +135,7 @@ class Tr2Vec:
             output = []
             for batch in loader:
                 x = batch[0]
+                x = x[:, :, 1:]
                 out = self.net(x.to(device, non_blocking=True))
                 out = F.max_pool1d(
                     out.transpose(1, 2),
