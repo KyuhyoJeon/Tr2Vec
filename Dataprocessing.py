@@ -24,7 +24,7 @@ class Trajectory3Dnewset(Dataset):
                 self.seq_len = size[0]
                 self.pred_len = size[1]
         
-        self.slicing = slicing
+        self.slicing = False if flag=='train' else slicing 
         self.stride = stride
         self.task_type = task_type
         self.flag = flag
