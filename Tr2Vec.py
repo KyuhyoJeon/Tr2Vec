@@ -39,7 +39,7 @@ class Tr2Vec:
         dataset = self.dataset if dataset is None else dataset
         
         if n_iters is None and n_epochs is None:
-            n_iters = 3000 if dataset.data_x.size <= 1000000 else 218750  # default param for n_iters, 600, 3000
+            n_iters = 21875 if dataset.data_x.size <= 1000000 else 218750  # default param for n_iters, 600, 3000
 
         if self.args.debug:
             n_iters = 1
