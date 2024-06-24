@@ -110,7 +110,7 @@ class Tr2Vec:
             cum_loss /= n_epoch_iters
             loss_log.append(cum_loss)
             if verbose:
-                print(f"Epoch #{n_epochs}: loss={cum_loss}")
+                print(f"Epoch #{self.n_epochs}: loss={cum_loss}")
             self.n_epochs += 1
             
             if self.args.debug:
