@@ -50,6 +50,8 @@ class Tr2Vec:
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.args.lr)
 
         loss_log = []
+        self.save(self.args.checkpoint+"_"+str(self.n_epochs)+"epochs.ckpt")
+        print("Model saved at epoch", self.n_epochs)
 
         while True:
             print("epoch:", self.n_epochs)
@@ -115,6 +117,7 @@ class Tr2Vec:
             
             if self.n_epochs%100 == 0:
                 self.save(self.args.checkpoint+"_"+str(self.n_epochs)+"epochs.ckpt")
+                print("Model saved at epoch", self.n_epochs)
             
             if self.args.debug:
                 break
