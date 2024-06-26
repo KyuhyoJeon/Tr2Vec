@@ -113,6 +113,9 @@ class Tr2Vec:
                 print(f"Epoch #{self.n_epochs}: loss={cum_loss}")
             self.n_epochs += 1
             
+            if self.n_epochs%100 == 0:
+                self.save(self.args.checkpoint+"_"+str(self.n_epochs)+"epochs.ckpt")
+            
             if self.args.debug:
                 break
 
