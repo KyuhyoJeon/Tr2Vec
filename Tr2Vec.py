@@ -158,6 +158,7 @@ class Tr2Vec:
                         out = self.net(x_sliding.to(device, non_blocking=True))
                         slicing=slice(sliding_padding, sliding_padding+sliding_length)
                         out = out[:, slicing]
+                        out = out.cpu()
                         reprs.append(out)
                     
                     out = torch.cat(reprs, dim=1)
