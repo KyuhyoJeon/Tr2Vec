@@ -131,7 +131,7 @@ class Tr2Vec:
         data_x = self.dataset.data_x if data_x is None else data_x
         batch_size = 8 if sliding_length is None else 256
         sliding_padding = 200 if sliding_length is not None else 0
-        _, ts_l, _ = data_x.shape
+        n_samples, ts_l, _ = data_x.shape
         device = 'cuda' if next(self.model.parameters()).is_cuda else 'cpu'
         
         org_training = self.net.training
@@ -146,6 +146,11 @@ class Tr2Vec:
                 x = x[:, :, 1:]
                 if sliding_length is not None: #V
                     reprs = []
+                    if n_samples < batch_size:
+                        calc_buffer = []
+                        calc_buffer_l = 0
+                        
+                    slicing=slice(sliding_padding, sliding_padding+sliding_length)
                     for i in range(0, ts_l, sliding_length):
                         l = i - sliding_padding
                         r = i + sliding_length + (sliding_padding if not causal else 0)
@@ -155,11 +160,30 @@ class Tr2Vec:
                             right=r-ts_l if r>ts_l else 0,
                             dim=1
                         )
-                        out = self.net(x_sliding.to(device, non_blocking=True))
-                        slicing=slice(sliding_padding, sliding_padding+sliding_length)
-                        out = out[:, slicing]
-                        out = out.cpu()
-                        reprs.append(out)
+                        if n_samples < batch_size:
+                            if calc_buffer_l + n_samples > batch_size:
+                                out = self.net(torch.cat(calc_buffer, dim=0).to(device, non_blocking=True))
+                                out = out[:, slicing]
+                                out = out.cpu()
+                                reprs += torch.split(out, n_samples)
+                                calc_buffer = []
+                                calc_buffer_l = 0
+                            calc_buffer.append(x_sliding)
+                            calc_buffer_l += n_samples
+                        else:
+                            out = self.net(x_sliding.to(device, non_blocking=True))
+                            out = out[:, slicing]
+                            out = out.cpu()
+                            reprs.append(out)
+
+                    if n_samples < batch_size:
+                        if calc_buffer_l > 0:
+                            out = self.net(torch.cat(calc_buffer, dim=0).to(device, non_blocking=True))
+                            out = out[:, slicing]
+                            out = out.cpu()
+                            reprs += torch.split(out, n_samples)
+                            calc_buffer = []
+                            calc_buffer_l = 0
                     
                     out = torch.cat(reprs, dim=1)
                 else:    
