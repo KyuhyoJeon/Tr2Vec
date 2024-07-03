@@ -72,3 +72,15 @@ def generate_continuous_mask(B, T, n=5, l=0.1):
 
 def generate_binomial_mask(B, T, p=0.5):
     return torch.from_numpy(np.random.binomial(1, p, size=(B, T))).to(torch.bool)
+    
+def torch_pad_nan(arr, left=0, right=0, dim=0):
+    if left > 0:
+        padshape = list(arr.shape)
+        padshape[dim] = left
+        arr = torch.cat((torch.full(padshape, np.nan), arr), dim=dim)
+    if right > 0:
+        padshape = list(arr.shape)
+        padshape[dim] = right
+        arr = torch.cat((arr, torch.full(padshape, np.nan)), dim=dim)
+    return arr
+    

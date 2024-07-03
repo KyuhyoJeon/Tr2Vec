@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import average_precision_score
 
-from Tools import hierarchical_contrastive_loss, take_per_row
+from Tools import hierarchical_contrastive_loss, take_per_row, torch_pad_nan
 from Networks import TrEncoder
 from Evaluations import fit_svm
 
@@ -125,11 +125,13 @@ class Tr2Vec:
     def save(self, path):
         torch.save(self.model.state_dict(), path)
         
-    def encode(self, data_x=None):    
+    def encode(self, data_x=None, causal=False, sliding_length=None, mask=None):
         assert self.dataset is not None or data_x is not None
         
         data_x = self.dataset.data_x if data_x is None else data_x
-        batch_size = 8
+        batch_size = 8 if sliding_length is None else 256
+        sliding_padding = 200 if sliding_length is not None else 0
+        _, ts_l, _ = data_x.shape
         device = 'cuda' if next(self.model.parameters()).is_cuda else 'cpu'
         
         org_training = self.net.training
@@ -142,13 +144,31 @@ class Tr2Vec:
             for batch in loader:
                 x = batch[0]
                 x = x[:, :, 1:]
-                out = self.net(x.to(device, non_blocking=True))
-                out = F.max_pool1d(
-                    out.transpose(1, 2),
-                    kernel_size = out.size(1),
-                ).transpose(1, 2)
-                out = out.cpu()
-                out = out.squeeze(1)
+                if sliding_length is not None: #V
+                    reprs = []
+                    for i in range(0, ts_l, sliding_length):
+                        l = i - sliding_padding
+                        r = i + sliding_length + (sliding_padding if not causal else 0)
+                        x_sliding = torch_pad_nan(
+                            x[:, max(l, 0) : min(r, ts_l)],
+                            left=-l if l<0 else 0,
+                            right=r-ts_l if r>ts_l else 0,
+                            dim=1
+                        )
+                        out = self.net(x_sliding.to(device, non_blocking=True))
+                        slicing=slice(sliding_padding, sliding_padding+sliding_length)
+                        out = out[:, slicing]
+                        reprs.append(out)
+                    
+                    out = torch.cat(reprs, dim=1)
+                else:    
+                    out = self.net(x.to(device, non_blocking=True))
+                    out = F.max_pool1d(
+                        out.transpose(1, 2),
+                        kernel_size = out.size(1),
+                    ).transpose(1, 2)
+                    out = out.cpu()
+                    out = out.squeeze(1)
                         
                 output.append(out)
                 
