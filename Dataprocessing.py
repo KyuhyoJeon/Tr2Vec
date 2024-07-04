@@ -7,7 +7,15 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class Trajectory3Dnewset(Dataset):
-    def __init__(self, path='Data/3D/new/csv/', size=None, task_type='C', slicing = False, stride = 10, flag='train', ratio = [7,1,2]):
+    def __init__(self, 
+                 path='Data/3D/new/csv/', 
+                 size=None, 
+                 task_type='C', 
+                 slicing = False, 
+                 slice = None, 
+                 stride = 10, 
+                 flag='train', 
+                 ratio = [7,1,2]):
         super().__init__()
         if size == None:
             if task_type == 'C':
@@ -151,11 +159,11 @@ def data_provider(args, flag):
         flag = flag,
         ratio= args.ratio)
     
-    data_loader = DataLoader(
-        data_set,
-        batch_size=batch_size,
-        shuffle=shuffle_flag,
-        num_workers=args.num_workers,
-        drop_last=drop_last)
+    # data_loader = DataLoader(
+    #     data_set,
+    #     batch_size=batch_size,
+    #     shuffle=shuffle_flag,
+    #     num_workers=args.num_workers,
+    #     drop_last=drop_last)
         
-    return data_set, data_loader
+    return data_set#, data_loader
